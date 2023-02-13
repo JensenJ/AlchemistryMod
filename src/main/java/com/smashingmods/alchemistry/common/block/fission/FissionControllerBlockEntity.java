@@ -48,21 +48,21 @@ public class FissionControllerBlockEntity extends AbstractReactorBlockEntity {
     }
 
     public boolean hasInputItemChanged(){
-        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+        return getInputHandler().getStackInSlot(0).getItem() != lastInputItem;
     }
 
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && !hasInputItemChanged()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && hasInputItemChanged()) {
             RecipeRegistry.getFissionRecipe(recipe -> ItemStack.isSameItemSameTags(recipe.getInput(), getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                         setProgress(0);
                         setRecipe(recipe.copy());
-                        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                     }
                 });
             }
+        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
     }
 
     @Override

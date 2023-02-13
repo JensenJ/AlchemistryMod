@@ -47,21 +47,21 @@ public class LiquifierBlockEntity extends AbstractFluidBlockEntity {
     }
 
     public boolean hasInputItemChanged(){
-        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+        return getInputHandler().getStackInSlot(0).getItem() != lastInputItem;
     }
 
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !hasInputItemChanged()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && hasInputItemChanged()) {
             RecipeRegistry.getLiquifierRecipe(recipe -> recipe.getInput().matches(getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.getId().equals(recipe.getId())) {
                         setProgress(0);
                         setRecipe(recipe.copy());
-                        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                     }
                 });
         }
+        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
     }
 
     @Override

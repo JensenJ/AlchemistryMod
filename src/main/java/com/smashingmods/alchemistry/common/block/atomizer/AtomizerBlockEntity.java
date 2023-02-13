@@ -48,20 +48,20 @@ public class AtomizerBlockEntity extends AbstractFluidBlockEntity {
     }
 
     public boolean hasInputFluidChanged(){
-        return getFluidStorage().getFluid().getFluid() == lastInputFluid;
+        return getFluidStorage().getFluid().getFluid() != lastInputFluid;
     }
 
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getFluidStorage().isEmpty() && !hasInputFluidChanged()) {
+        if (level != null && !level.isClientSide() && !getFluidStorage().isEmpty() && hasInputFluidChanged()) {
             RecipeRegistry.getAtomizerRecipe(recipe -> recipe.getInput().getFluid().equals(getFluidStorage().getFluidStack().getFluid()), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                         setProgress(0);
                         setRecipe(recipe.copy());
-                        lastInputFluid = getFluidStorage().getFluid().getFluid();
                     }
                 });
         }
+        lastInputFluid = getFluidStorage().getFluid().getFluid();
     }
 
     public boolean canProcessRecipe() {

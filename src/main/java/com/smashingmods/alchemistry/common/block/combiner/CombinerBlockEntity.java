@@ -12,11 +12,13 @@ import com.smashingmods.alchemylib.api.recipe.AbstractProcessingRecipe;
 import com.smashingmods.alchemylib.api.storage.EnergyStorageHandler;
 import com.smashingmods.alchemylib.api.storage.ProcessingSlotHandler;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,8 @@ public class CombinerBlockEntity extends AbstractSearchableBlockEntity {
 
     private CombinerRecipe currentRecipe;
     private ResourceLocation recipeId;
+
+    private NonNullList<Item> lastItems = NonNullList.create();
 
     public CombinerBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(Alchemistry.MODID, BlockEntityRegistry.COMBINER_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -43,9 +47,18 @@ public class CombinerBlockEntity extends AbstractSearchableBlockEntity {
         super.onLoad();
     }
 
+    public boolean haveInputItemsChanged(){
+        for(int i = 0; i < lastItems.size(); i++){
+            if (getInputHandler().getStackInSlot(i).getItem() != lastItems.get(i)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && haveInputItemsChanged()) {
             RecipeRegistry.getCombinerRecipe(recipe -> recipe.matchInputs(getInputHandler().getStacks()), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
@@ -53,6 +66,10 @@ public class CombinerBlockEntity extends AbstractSearchableBlockEntity {
                         setRecipe(recipe.copy());
                     }
                 });
+        }
+        lastItems.clear();
+        for(ItemStack stack : getInputHandler().getStacks()){
+            lastItems.add(stack.getItem());
         }
     }
 

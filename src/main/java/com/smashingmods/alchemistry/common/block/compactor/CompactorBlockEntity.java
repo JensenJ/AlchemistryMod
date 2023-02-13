@@ -45,21 +45,21 @@ public class CompactorBlockEntity extends AbstractSearchableBlockEntity {
     }
 
     public boolean hasInputItemChanged(){
-        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+        return getInputHandler().getStackInSlot(0).getItem() != lastInputItem;
     }
 
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && !hasInputItemChanged()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && hasInputItemChanged()) {
             RecipeRegistry.getCompactorRecipe(recipe -> recipe.getInput().matches(getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                         setProgress(0);
                         setRecipe(recipe);
-                        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                     }
                 });
         }
+        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
     }
 
     @Override

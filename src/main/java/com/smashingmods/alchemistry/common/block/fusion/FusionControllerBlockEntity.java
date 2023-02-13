@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +33,8 @@ public class FusionControllerBlockEntity extends AbstractReactorBlockEntity {
     private FusionRecipe currentRecipe;
     private ResourceLocation recipeId;
     private boolean autoBalanced = false;
+    private Item lastItem1;
+    private Item lastItem2;
 
     public FusionControllerBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(BlockEntityRegistry.FUSION_CONTROLLER_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -56,9 +59,13 @@ public class FusionControllerBlockEntity extends AbstractReactorBlockEntity {
         super.tick();
     }
 
+    public boolean haveInputItemsChanged(){
+        return getInputHandler().getStackInSlot(0).getItem() != lastItem1 && getInputHandler().getStackInSlot(1).getItem() != lastItem2;
+    }
+
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && haveInputItemsChanged()) {
             Predicate<FusionRecipe> recipePredicate = recipe -> {
                 ItemStack input1 = getInputHandler().getStackInSlot(0);
                 ItemStack input2 = getInputHandler().getStackInSlot(1);
@@ -74,6 +81,8 @@ public class FusionControllerBlockEntity extends AbstractReactorBlockEntity {
                     }
                 });
         }
+        lastItem1 = getInputHandler().getStackInSlot(0).getItem();
+        lastItem2 = getInputHandler().getStackInSlot(1).getItem();
     }
 
     @Override
