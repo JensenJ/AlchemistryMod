@@ -19,6 +19,7 @@ import net.minecraft.world.Containers;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,6 +34,8 @@ public class DissolverBlockEntity extends AbstractInventoryBlockEntity {
     private DissolverRecipe currentRecipe;
     private ResourceLocation recipeId;
     private final NonNullList<ItemStack> internalBuffer = NonNullList.createWithCapacity(64);
+
+    private Item lastInputItem;
 
     public DissolverBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(Alchemistry.MODID, BlockEntityRegistry.DISSOLVER_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -56,14 +59,19 @@ public class DissolverBlockEntity extends AbstractInventoryBlockEntity {
         }
     }
 
+    public boolean hasInputItemChanged(){
+        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+    }
+
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && !hasInputItemChanged()) {
             RecipeRegistry.getDissolverRecipe(recipe -> recipe.matches(getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                    if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                        setProgress(0);
                        setRecipe(recipe);
+                       lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                    }
                 });
         }
@@ -104,12 +112,12 @@ public class DissolverBlockEntity extends AbstractInventoryBlockEntity {
                 if (slotStack.isEmpty() || (ItemStack.isSameItemSameTags(bufferStack, slotStack) && bufferStack.getCount() + slotStack.getCount() <= slotStack.getMaxStackSize())) {
                     ItemHandlerHelper.insertItemStacked(getOutputHandler(), bufferStack, false);
                     internalBuffer.remove(i);
+                    setChanged();
                     break;
                 }
             }
         }
         setCanProcess(canProcessRecipe());
-        setChanged();
     }
 
     @Override
