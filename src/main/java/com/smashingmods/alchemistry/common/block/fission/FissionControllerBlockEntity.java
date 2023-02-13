@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +30,7 @@ public class FissionControllerBlockEntity extends AbstractReactorBlockEntity {
 
     private FissionRecipe currentRecipe;
     private ResourceLocation recipeId;
+    private Item lastInputItem;
 
     public FissionControllerBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(BlockEntityRegistry.FISSION_CONTROLLER_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -45,14 +47,19 @@ public class FissionControllerBlockEntity extends AbstractReactorBlockEntity {
         super.onLoad();
     }
 
+    public boolean hasInputItemChanged(){
+        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+    }
+
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && !hasInputItemChanged()) {
             RecipeRegistry.getFissionRecipe(recipe -> ItemStack.isSameItemSameTags(recipe.getInput(), getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                         setProgress(0);
                         setRecipe(recipe.copy());
+                        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                     }
                 });
             }

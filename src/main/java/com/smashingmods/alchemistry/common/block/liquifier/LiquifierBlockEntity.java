@@ -17,6 +17,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.fluids.FluidStack;
@@ -29,6 +30,7 @@ public class LiquifierBlockEntity extends AbstractFluidBlockEntity {
 
     private LiquifierRecipe currentRecipe;
     private ResourceLocation recipeId;
+    private Item lastInputItem;
 
     public LiquifierBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(Alchemistry.MODID, BlockEntityRegistry.LIQUIFIER_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -44,14 +46,19 @@ public class LiquifierBlockEntity extends AbstractFluidBlockEntity {
         super.onLoad();
     }
 
+    public boolean hasInputItemChanged(){
+        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+    }
+
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !hasInputItemChanged()) {
             RecipeRegistry.getLiquifierRecipe(recipe -> recipe.getInput().matches(getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.getId().equals(recipe.getId())) {
                         setProgress(0);
                         setRecipe(recipe.copy());
+                        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                     }
                 });
         }

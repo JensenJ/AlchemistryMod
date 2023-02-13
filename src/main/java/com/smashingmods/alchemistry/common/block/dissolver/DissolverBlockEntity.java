@@ -34,7 +34,6 @@ public class DissolverBlockEntity extends AbstractInventoryBlockEntity {
     private DissolverRecipe currentRecipe;
     private ResourceLocation recipeId;
     private final NonNullList<ItemStack> internalBuffer = NonNullList.createWithCapacity(64);
-
     private Item lastInputItem;
 
     public DissolverBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {

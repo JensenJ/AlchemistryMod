@@ -17,8 +17,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +31,7 @@ public class AtomizerBlockEntity extends AbstractFluidBlockEntity {
 
     private AtomizerRecipe currentRecipe;
     private ResourceLocation recipeId;
+    private Fluid lastInputFluid;
 
     public AtomizerBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(Alchemistry.MODID, BlockEntityRegistry.ATOMIZER_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -44,13 +47,18 @@ public class AtomizerBlockEntity extends AbstractFluidBlockEntity {
         super.onLoad();
     }
 
+    public boolean hasInputFluidChanged(){
+        return getFluidStorage().getFluid().getFluid() == lastInputFluid;
+    }
+
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getFluidStorage().isEmpty()) {
+        if (level != null && !level.isClientSide() && !getFluidStorage().isEmpty() && !hasInputFluidChanged()) {
             RecipeRegistry.getAtomizerRecipe(recipe -> recipe.getInput().getFluid().equals(getFluidStorage().getFluidStack().getFluid()), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                         setProgress(0);
                         setRecipe(recipe.copy());
+                        lastInputFluid = getFluidStorage().getFluid().getFluid();
                     }
                 });
         }

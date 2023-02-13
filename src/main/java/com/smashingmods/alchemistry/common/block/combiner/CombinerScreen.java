@@ -91,7 +91,7 @@ public class CombinerScreen extends AbstractProcessingScreen<CombinerMenu> {
             itemRenderer.renderAndDecorateItem(currentOutput, leftPos + 152, topPos + 15);
 
             if (pMouseX >= leftPos + 149 && pMouseX < leftPos + 173  && pMouseY >= topPos + 11 && pMouseY < topPos + 35) {
-                renderItemTooltip(pPoseStack, currentOutput, MutableComponent.create(new TranslatableContents("alchemistry.container.combiner.current_recipe")), pMouseX, pMouseY);
+                renderItemTooltip(pPoseStack, currentOutput, MutableComponent.create(new TranslatableContents("alchemistry.container.current_recipe")), pMouseX, pMouseY);
             }
 
             int xOrigin = leftPos + 48;

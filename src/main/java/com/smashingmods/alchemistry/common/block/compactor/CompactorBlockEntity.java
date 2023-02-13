@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,7 @@ public class CompactorBlockEntity extends AbstractSearchableBlockEntity {
 
     private CompactorRecipe currentRecipe;
     private ResourceLocation recipeId;
+    private Item lastInputItem;
 
     public CompactorBlockEntity(BlockPos pWorldPosition, BlockState pBlockState) {
         super(Alchemistry.MODID, BlockEntityRegistry.COMPACTOR_BLOCK_ENTITY.get(), pWorldPosition, pBlockState);
@@ -42,14 +44,19 @@ public class CompactorBlockEntity extends AbstractSearchableBlockEntity {
         super.onLoad();
     }
 
+    public boolean hasInputItemChanged(){
+        return getInputHandler().getStackInSlot(0).getItem() == lastInputItem;
+    }
+
     @Override
     public void updateRecipe() {
-        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked()) {
+        if (level != null && !level.isClientSide() && !getInputHandler().isEmpty() && !isRecipeLocked() && !hasInputItemChanged()) {
             RecipeRegistry.getCompactorRecipe(recipe -> recipe.getInput().matches(getInputHandler().getStackInSlot(0)), level)
                 .ifPresent(recipe -> {
                     if (currentRecipe == null || !currentRecipe.equals(recipe)) {
                         setProgress(0);
                         setRecipe(recipe);
+                        lastInputItem = getInputHandler().getStackInSlot(0).getItem();
                     }
                 });
         }
